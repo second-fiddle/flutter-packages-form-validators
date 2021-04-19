@@ -6,6 +6,9 @@ formValidationJa() {
     var required = ValidatorBuilder().required();
     expect(required.test(''), 'この値は必須です。');
     expect(required.test('test'), null);
+    required = ValidatorBuilder(required: true);
+    expect(required.test(''), 'この値は必須です。');
+    expect(required.test('test'), null);
 
     var minLength = ValidatorBuilder().minLength(5);
     expect(minLength.test("1234"), '5 文字以上で入力してください。');

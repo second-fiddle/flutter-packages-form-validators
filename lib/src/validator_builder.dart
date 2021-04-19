@@ -16,7 +16,13 @@ class ValidatorBuilder {
   static String _locale = 'ja';
 
   /// コンストラクタ
-  ValidatorBuilder() : _messageBuilder = Lang.getLocale(_locale);
+  ValidatorBuilder({
+    bool required = false,
+  }) : _messageBuilder = Lang.getLocale(_locale) {
+    if (required) {
+      _validators.add(_requiredValidator());
+    }
+  }
 
   /// 指定ロケールのバリデーションメッセージを追加する。
   /// @param String locale ロケール識別キー
@@ -37,8 +43,9 @@ class ValidatorBuilder {
 
   /// 適用するバリデーションを追加する。
   /// @param ValidationCallback validator バリデーション実行メソッド
+  /// @param int? position バリデーション実行メソッド追加位置
   /// @return ValidationBuilder is this
-  ValidatorBuilder add(ValidatorCallback validator) {
+  ValidatorBuilder add(ValidatorCallback validator, {int? position}) {
     _validators.add(validator);
     return this;
   }
@@ -74,10 +81,14 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder required([String? message]) {
-    ValidatorCallback validator =
-        (v) => isEmpty(v) ? message ?? _messageBuilder.required(v) : null;
-    return add(validator);
+    return add(_requiredValidator(message));
   }
+
+  /// 必須チェックメイン
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorCallback is Function
+  ValidatorCallback _requiredValidator([String? message]) => (v) =>
+      v.isEmpty ? message ?? _messageBuilder.required(v) : null;
 
   /// 最小文字数チェック
   /// @param int length 最小文字数
