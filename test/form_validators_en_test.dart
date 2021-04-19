@@ -3,6 +3,8 @@ import 'package:form_validators/form_validators.dart';
 
 formValidationEn() {
   test('form validators En', () {
+    ValidatorBuilder.setLocale('en');
+
     var required = ValidatorBuilder().required();
     expect(required.test(''), 'The field is required.');
     expect(required.test('test'), null);
@@ -27,23 +29,6 @@ formValidationEn() {
     expect(length.test("12"), null);
     expect(length.test("1234"), null);
     expect(length.test(""), null);
-
-    var min = ValidatorBuilder().min(5);
-    expect(min.test("4"), 'This value should be greater than or equal to 5.');
-    expect(min.test("5"), null);
-    expect(min.test(""), null);
-
-    var max = ValidatorBuilder().max(5);
-    expect(max.test("6"), 'This value should be less than or equal to 5.');
-    expect(max.test("5"), null);
-    expect(max.test(""), null);
-
-    var range = ValidatorBuilder().range(2, 4);
-    expect(range.test("1"), 'This value should be between 2 and 4.');
-    expect(range.test("15"), 'This value should be between 2 and 4.');
-    expect(range.test("2"), null);
-    expect(range.test("4"), null);
-    expect(range.test(""), null);
 
     var equalto = ValidatorBuilder().equalTo("comparison");
     expect(equalto.test("value"), 'This value should be the same.');
@@ -71,6 +56,13 @@ formValidationEn() {
     expect(lte.test("4"), null);
     expect(lte.test(""), null);
 
+    var range = ValidatorBuilder().range(2, 4);
+    expect(range.test("1"), 'This value should be between 2 and 4.');
+    expect(range.test("15"), 'This value should be between 2 and 4.');
+    expect(range.test("2"), null);
+    expect(range.test("4"), null);
+    expect(range.test(""), null);
+
     var pattern = ValidatorBuilder().pattern(
         r'[\d]', 'This value seems to be invalid.');
     expect(pattern.test("a"), "This value seems to be invalid.");
@@ -79,7 +71,7 @@ formValidationEn() {
 
     var email = ValidatorBuilder().email();
     expect(
-        email.test('user@example'), "The field is not a valid email address.");
+        email.test('user@'), "The field is not a valid email address.");
     expect(email.test('user@example.jp'), null);
     expect(email.test(""), null);
 
@@ -88,11 +80,6 @@ formValidationEn() {
         phoneNumber.test('090123'), "The field is not a valid phone number.");
     expect(phoneNumber.test('09024356020'), null);
     expect(phoneNumber.test(""), null);
-
-    var ip = ValidatorBuilder().ip();
-    expect(ip.test('192.168.1.256'), "The field is not a valid IP address.");
-    expect(ip.test('8.8.8.8'), null);
-    expect(ip.test(""), null);
 
     var url = ValidatorBuilder().url();
     expect(url.test('https://yahoo'), "The field is not a valid URL address.");
@@ -118,12 +105,12 @@ formValidationEn() {
     expect(integer.test(""), null);
 
     var digits = ValidatorBuilder().digits();
-    expect(digits.test('a'), "This value should be digits.");
+    expect(digits.test('a'), "This value should be positive digits.");
     expect(digits.test('1'), null);
-    expect(digits.test('1.0'), "This value should be digits.");
-    expect(digits.test('0'), null);
-    expect(digits.test('-1'), "This value should be digits.");
-    expect(digits.test('-1.0'), "This value should be digits.");
+    expect(digits.test('1.0'), "This value should be positive digits.");
+    expect(digits.test('0'), 'This value should be positive digits.');
+    expect(digits.test('-1'), "This value should be positive digits.");
+    expect(digits.test('-1.0'), "This value should be positive digits.");
     expect(digits.test(""), null);
 
     var alpha = ValidatorBuilder().alpha();
@@ -147,18 +134,18 @@ formValidationEn() {
     expect(date.test('2021/04/31'), 'This field is not a valid date.');
     expect(date.test('2021年xx月xx日'), 'This field is not a valid date.');
     expect(date.test('2021年04月31日'), 'This field is not a valid date.');
-    expect(date.test('2021-04-01'), null);
     expect(date.test('2021-4-1'), null);
     expect(date.test('9999-12-31'), null);
     expect(date.test('1900-1-1'), null);
+
+    date = ValidatorBuilder().date('y-MM-dd');
+    expect(date.test('2021-04-01'), null);
     expect(date.test('1900-01-01'), null);
+
+    date = ValidatorBuilder().date('y/M/d');
     expect(date.test('2021/4/30'), null);
     expect(date.test('9999/12/31'), null);
     expect(date.test('1900/1/1'), null);
     expect(date.test('1900/01/01'), null);
-    expect(date.test('2021年4月30日'), null);
-    expect(date.test('9999年12月31日'), null);
-    expect(date.test('1900年1月1日'), null);
-    expect(date.test('1900年01月01日'), null);
   });
 }

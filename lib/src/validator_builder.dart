@@ -1,22 +1,32 @@
-import 'package:form_validators/src/message_builder.dart';
-import 'package:intl/intl.dart';
-import 'package:validators/validators.dart';
-import 'extensions/string.dart';
-import 'i18n/lang.dart';
+import 'package:utilities/utilities.dart';
+import 'lang.dart';
+import 'i18n/message_builder.dart';
 
 typedef ValidatorCallback = String? Function(String value);
 
+/// バリデーション定義作成クラス
 class ValidatorBuilder {
+  /// 適用するバリデーション群
   final List<ValidatorCallback> _validators = [];
-  final MessageBuilder _messageBuilder;
-  static String _locale = 'en';
-  static List<String> _datePatterns = ['', 'yyyy-MM-dd', 'yyyy/MM/dd', 'yyyy年MM月dd日'];
 
+  /// バリデーションメッセージ本体
+  final MessageBuilder _messageBuilder;
+
+  /// デフォルトロケール
+  static String _locale = 'ja';
+
+  /// コンストラクタ
   ValidatorBuilder() : _messageBuilder = Lang.getLocale(_locale);
 
-  static void addMessage(String locale, MessageBuilder messageLocale) =>
-      Lang.add(locale, messageLocale);
+  /// 指定ロケールのバリデーションメッセージを追加する。
+  /// @param String locale ロケール識別キー
+  /// @param MessageBuilder messageBuilder バリデーションメッセージ本体
+  static void addMessage(String locale, MessageBuilder messageBuilder) =>
+      Lang.add(locale, messageBuilder);
 
+  /// 使用するロケールを設定する。
+  /// @param String locale ロケール識別キー
+  /// @throw ArgumentError ロケール識別キーが使用可能なバリデーションメッセージとして登録されていない。
   static void setLocale(String locale) {
     if (!Lang.contain(locale)) {
       throw ArgumentError.value(locale, 'locale', 'locale is not available.');
@@ -25,15 +35,17 @@ class ValidatorBuilder {
     _locale = locale;
   }
 
-  static void addDatePatterns(List<String> patterns) {
-    _datePatterns = [..._datePatterns, ...patterns];
-  }
-
+  /// 適用するバリデーションを追加する。
+  /// @param ValidationCallback validator バリデーション実行メソッド
+  /// @return ValidationBuilder is this
   ValidatorBuilder add(ValidatorCallback validator) {
     _validators.add(validator);
     return this;
   }
 
+  /// 適用されているバリデーションを順番に実行する。
+  /// @param String value チェック対象
+  /// @return match is validation message, not match is null
   String? test(String value) {
     for (var validator in _validators) {
       final String? result = validator(value);
@@ -44,8 +56,12 @@ class ValidatorBuilder {
     return null;
   }
 
+  /// 適用されているバリデーションを実行する。
+  /// @return ValidatorCallback is Function
   ValidatorCallback validate() => test;
 
+  /// 適用されているバリデーションをクリアする。
+  /// @return ValidationBuilder is this
   ValidatorBuilder reset() {
     _validators.clear();
     return this;
@@ -54,19 +70,30 @@ class ValidatorBuilder {
   /// ////////////////////////////////////////////////////
   /// Validator Definition
   /// ////////////////////////////////////////////////////
+  /// 必須チェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder required([String? message]) {
     ValidatorCallback validator =
-        (v) => isNull(v) ? message ?? _messageBuilder.required() : null;
+        (v) => isEmpty(v) ? message ?? _messageBuilder.required(v) : null;
     return add(validator);
   }
 
+  /// 最小文字数チェック
+  /// @param int length 最小文字数
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder minLength(int length, [String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && !isLength(v, length))
+    ValidatorCallback validator = (v) => !isLength(v, length)
         ? message ?? _messageBuilder.minLength(v, length)
         : null;
     return add(validator);
   }
 
+  /// 最大文字数チェック
+  /// @param int length 最大文字数
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder maxLength(int length, [String? message]) {
     ValidatorCallback validator = (v) => !isLength(v, 0, length)
         ? message ?? _messageBuilder.maxLength(v, length)
@@ -74,161 +101,224 @@ class ValidatorBuilder {
     return add(validator);
   }
 
+  /// 文字数範囲チェック
+  /// @param int min 最小文字数
+  /// @param int max 最大文字数
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder length(int min, int max, [String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && !isLength(v, min, max))
+    ValidatorCallback validator = (v) => !isLength(v, min, max)
         ? message ?? _messageBuilder.length(v, min, max)
         : null;
     return add(validator);
   }
 
-  ValidatorBuilder min(int min, [String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && v.toInt() < min)
-        ? message ?? _messageBuilder.min(v, min)
-        : null;
-    return add(validator);
-  }
-
-  ValidatorBuilder max(int max, [String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && v.toInt() > max)
-        ? message ?? _messageBuilder.max(v, max)
-        : null;
-    return add(validator);
-  }
-
-  ValidatorBuilder range(int min, int max, [String? message]) {
-    ValidatorCallback validator = (v) =>
-        (!isNull(v) && (v.toInt() < min || v.toInt() > max))
-            ? message ?? _messageBuilder.range(v, min, max)
-            : null;
-    return add(validator);
-  }
-
+  /// 同値チェック
+  /// @param String comparison チェック対象文字列
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder equalTo(String comparison, [String? message]) {
     ValidatorCallback validator = (v) =>
         !equals(v, comparison) ? message ?? _messageBuilder.equalto(v) : null;
     return add(validator);
   }
 
-  ValidatorBuilder gt(int compare, [String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && v.toInt() <= compare)
-        ? message ?? _messageBuilder.gt(v, compare)
+  /// より大きいチェック
+  /// @param int comparison 比較対象値
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder gt(int comparison, [String? message]) {
+    ValidatorCallback validator = (v) => !isGt(v, comparison)
+        ? message ?? _messageBuilder.gt(v, comparison)
         : null;
     return add(validator);
   }
 
-  ValidatorBuilder gte(int compare, [String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && v.toInt() < compare)
-        ? message ?? _messageBuilder.gte(v, compare)
+  /// 以上チェック
+  /// @param int comparison 比較対象値
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder gte(int comparison, [String? message]) {
+    ValidatorCallback validator = (v) => !isGte(v, comparison)
+        ? message ?? _messageBuilder.gte(v, comparison)
         : null;
     return add(validator);
   }
 
-  ValidatorBuilder lt(int compare, [String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && v.toInt() >= compare)
-        ? message ?? _messageBuilder.lt(v, compare)
+  /// 未満チェック
+  /// @param int comparison 比較対象値
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder lt(int comparison, [String? message]) {
+    ValidatorCallback validator = (v) => !isLt(v, comparison)
+        ? message ?? _messageBuilder.lt(v, comparison)
         : null;
     return add(validator);
   }
 
-  ValidatorBuilder lte(int compare, [String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && v.toInt() > compare)
-        ? message ?? _messageBuilder.lte(v, compare)
+  /// 以下チェック
+  /// @param int comparison 比較対象値
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder lte(int comparison, [String? message]) {
+    ValidatorCallback validator = (v) => !isLte(v, comparison)
+        ? message ?? _messageBuilder.lte(v, comparison)
         : null;
     return add(validator);
   }
 
-  ValidatorBuilder pattern(String pattern, String message) {
-    ValidatorCallback validator =
-        (v) => (!isNull(v) && !matches(v, pattern)) ? message : null;
+  /// 範囲チェック
+  /// @param int min 比較最小値
+  /// @param int max 比較最大値
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder range(int min, int max, [String? message]) {
+    ValidatorCallback validator = (v) => !isRange(v, min, max)
+        ? message ?? _messageBuilder.range(v, min, max)
+        : null;
     return add(validator);
   }
 
-  ValidatorBuilder email([String? message]) {
+  /// 正規表現チェック
+  /// @param String pattern 正規表現文字列
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder pattern(String pattern, [String? message]) {
     ValidatorCallback validator = (v) =>
-        (!isNull(v) && !isEmail(v)) ? message ?? _messageBuilder.email(v) : null;
+        !matches(v, pattern) ? message ?? _messageBuilder.pattern(v) : null;
     return add(validator);
   }
 
+  /// メールアドレスチェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder email([String? message]) {
+    ValidatorCallback validator =
+        (v) => !isEmail(v) ? message ?? _messageBuilder.email(v) : null;
+    return add(validator);
+  }
+
+  /// 電話番号チェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder phoneNumber([String? message]) {
     ValidatorCallback validator = (v) =>
-        (!isNull(v) && !matches(v, r'^\d{7,15}$'))
-            ? message ?? _messageBuilder.phoneNumber(v)
-            : null;
+        !isPhoneNumber(v) ? message ?? _messageBuilder.phoneNumber(v) : null;
     return add(validator);
   }
 
-  ValidatorBuilder ip([String? message]) {
-    ValidatorCallback validator = (v) =>
-        (!isNull(v) && !isIP(v)) ? message ?? _messageBuilder.ip(v) : null;
-    return add(validator);
-  }
-
+  /// URLチェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder url([String? message]) {
-    ValidatorCallback validator = (v) =>
-        (!isNull(v) && !isURL(v)) ? message ?? _messageBuilder.url(v) : null;
+    ValidatorCallback validator =
+        (v) => !isUrl(v) ? message ?? _messageBuilder.url(v) : null;
     return add(validator);
   }
 
+  /// 数値チェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder number([String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && !isFloat(v))
-        ? message ?? _messageBuilder.number(v)
-        : null;
+    ValidatorCallback validator =
+        (v) => !isNumber(v) ? message ?? _messageBuilder.number(v) : null;
     return add(validator);
   }
 
+  /// 整数チェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder integer([String? message]) {
-    ValidatorCallback validator = (v) =>
-        (!isNull(v) && !isInt(v)) ? message ?? _messageBuilder.integer(v) : null;
+    ValidatorCallback validator =
+        (v) => !isInteger(v) ? message ?? _messageBuilder.integer(v) : null;
     return add(validator);
   }
 
+  /// 正の整数チェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder digits([String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && !matches(v, r'^\d+$'))
-        ? message ?? _messageBuilder.digits(v)
-        : null;
+    ValidatorCallback validator =
+        (v) => !isDigits(v) ? message ?? _messageBuilder.digits(v) : null;
     return add(validator);
   }
 
+  /// 英字チェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder alpha([String? message]) {
-    ValidatorCallback validator = (v) =>
-        (!isNull(v) && !isAlpha(v)) ? message ?? _messageBuilder.alpha(v) : null;
+    ValidatorCallback validator =
+        (v) => !isAlpha(v) ? message ?? _messageBuilder.alpha(v) : null;
     return add(validator);
   }
 
+  /// 英数字チェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder alphanum([String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && !isAlphanumeric(v))
-        ? message ?? _messageBuilder.alphanum(v)
-        : null;
+    ValidatorCallback validator = (v) =>
+        !isAlphanumeric(v) ? message ?? _messageBuilder.alphanum(v) : null;
     return add(validator);
   }
 
+  /// 半角チェック
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
   ValidatorBuilder halfChars([String? message]) {
-    ValidatorCallback validator = (v) => (!isNull(v) && !isHalfWidth(v))
+    ValidatorCallback validator =
+        (v) => !isHalfWidth(v) ? message ?? _messageBuilder.halfChars(v) : null;
+    return add(validator);
+  }
+
+  /// 日付チェック
+  /// @param String format 日付書式（デフォルト=y-M-d）
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder date([String format = 'y-M-d', String? message]) {
+    ValidatorCallback validator =
+        (v) => !isDate(v, format) ? message ?? _messageBuilder.date(v) : null;
+    return add(validator);
+  }
+
+  /// 日付（過去）チェック
+  /// @param DateTime? comparison チェック対象日（未指定の場合、当日）
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder before([DateTime? comparison, String? message]) {
+    ValidatorCallback validator = (v) =>
+        !isBefore(v, comparison) ? message ?? _messageBuilder.date(v) : null;
+    return add(validator);
+  }
+
+  /// 日付（以前）チェック
+  /// @param DateTime? comparison チェック対象日（未指定の場合、当日）
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder todayBefore([DateTime? comparison, String? message]) {
+    ValidatorCallback validator = (v) => !isTodayBefore(v, comparison)
         ? message ?? _messageBuilder.halfChars(v)
         : null;
     return add(validator);
   }
 
-  ValidatorBuilder date([String? message]) {
-    ValidatorCallback validator = (v) {
-      if (isNull(v)) {
-        return null;
-      }
+  /// 日付（未来）チェック
+  /// @param DateTime? comparison チェック対象日（未指定の場合、当日）
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder after([DateTime? comparison, String? message]) {
+    ValidatorCallback validator = (v) =>
+        !isAfter(v, comparison) ? message ?? _messageBuilder.date(v) : null;
+    return add(validator);
+  }
 
-      for (int i = 0; i < _datePatterns.length; i++) {
-        String pattern = _datePatterns[i];
-        try {
-          if (isNull(pattern)) {
-            DateFormat().parseStrict(v);
-          } else {
-            DateFormat().addPattern(pattern).parseStrict(v);
-          }
-          return null;
-        } catch(e){}
-      }
-
-      return message ?? _messageBuilder.date(v);
-    };
+  /// 日付（以降）チェック
+  /// @param DateTime? comparison チェック対象日（未指定の場合、当日）
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorBuilder is this
+  ValidatorBuilder todayAfter([DateTime? comparison, String? message]) {
+    ValidatorCallback validator = (v) => !isTodayAfter(v, comparison)
+        ? message ?? _messageBuilder.halfChars(v)
+        : null;
     return add(validator);
   }
 }

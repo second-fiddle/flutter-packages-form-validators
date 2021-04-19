@@ -149,13 +149,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "1.3.0"
-  validators:
+  utilities:
     dependency: "direct main"
     description:
-      name: validators
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.0.0"
+      path: "."
+      ref: main
+      resolved-ref: "453bafb1318ca6fc579102ca480cf6374127e9d6"
+      url: "https://github.com/second-fiddle/flutter-packages-utilities.git"
+    source: git
+    version: "0.0.1"
   vector_math:
     dependency: transitive
     description:

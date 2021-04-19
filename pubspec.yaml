@@ -12,8 +12,11 @@ dependencies:
   flutter:
     sdk: flutter
   sprintf: "^6.0.0-nullsafety"
-  validators: ^3.0.0
   intl: ^0.17.0
+  utilities:
+    git:
+      url: https://github.com/second-fiddle/flutter-packages-utilities.git
+      ref: main
 
 dev_dependencies:
   flutter_test:

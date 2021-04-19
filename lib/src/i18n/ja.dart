@@ -1,8 +1,9 @@
-import '../message_builder.dart';
+import 'message_builder.dart';
 
+/// バリデーションメッセージ（日本語）
 class Ja extends MessageBuilder {
   @override
-  String required() => 'この値は必須です。';
+  String required(String v) => 'この値は必須です。';
 
   @override
   String minLength(String v, int n) => '$n 文字以上で入力してください。';
@@ -12,15 +13,6 @@ class Ja extends MessageBuilder {
 
   @override
   String length(String v, int min, int max) => '$min から $max 文字の間で入力してください。';
-
-  @override
-  String min(String v, int n) => '$n 以上の値にしてください。';
-
-  @override
-  String max(String v, int n) => '$n 以下の値にしてください。';
-
-  @override
-  String range(String v, int min, int max) => '$min から $max の値にしてください。';
 
   @override
   String equalto(String v) => '値が違います。';
@@ -38,6 +30,9 @@ class Ja extends MessageBuilder {
   String lte(String v, int n) => '$n より小さいか、同じ値を入力してください。';
 
   @override
+  String range(String v, int min, int max) => '$min から $max の値にしてください。';
+
+  @override
   String pattern(String v) => 'この値は無効です。';
 
   @override
@@ -45,12 +40,6 @@ class Ja extends MessageBuilder {
 
   @override
   String phoneNumber(String v) => '有効な電話番号ではありません。';
-
-  @override
-  String ip(String v) => '有効なIPアドレスではありません。';
-
-  @override
-  String ipv6(String v) => '有効なIPv6アドレスではありません。';
 
   @override
   String url(String v) => '有効なURLではありません。';
@@ -61,7 +50,7 @@ class Ja extends MessageBuilder {
   String integer(String v) => '整数を入力してください。';
 
   @override
-  String digits(String v) => '0以上の整数を入力してください。';
+  String digits(String v) => '1以上の整数を入力してください。';
 
   @override
   String alpha(String v) => '英字を入力してください。';
