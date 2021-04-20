@@ -2,7 +2,7 @@ import 'package:utilities/utilities.dart';
 import 'lang.dart';
 import 'i18n/message_builder.dart';
 
-typedef ValidatorCallback = String? Function(String value);
+typedef ValidatorCallback = String? Function(String? value);
 
 /// バリデーション定義作成クラス
 class ValidatorBuilder {
@@ -53,7 +53,7 @@ class ValidatorBuilder {
   /// 適用されているバリデーションを順番に実行する。
   /// @param String value チェック対象
   /// @return match is validation message, not match is null
-  String? test(String value) {
+  String? test(String? value) {
     for (var validator in _validators) {
       final String? result = validator(value);
       if (result != null) {
@@ -88,14 +88,14 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorCallback is Function
   ValidatorCallback _requiredValidator([String? message]) => (v) =>
-      v.isEmpty ? message ?? _messageBuilder.required(v) : null;
+    (v?.isEmpty ?? true) ? message ?? _messageBuilder.required(v!) : null;
 
   /// 最小文字数チェック
   /// @param int length 最小文字数
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder minLength(int length, [String? message]) {
-    ValidatorCallback validator = (v) => !isLength(v, length)
+    ValidatorCallback validator = (v) => !isLength(v!, length)
         ? message ?? _messageBuilder.minLength(v, length)
         : null;
     return add(validator);
@@ -106,7 +106,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder maxLength(int length, [String? message]) {
-    ValidatorCallback validator = (v) => !isLength(v, 0, length)
+    ValidatorCallback validator = (v) => !isLength(v!, 0, length)
         ? message ?? _messageBuilder.maxLength(v, length)
         : null;
     return add(validator);
@@ -118,7 +118,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder length(int min, int max, [String? message]) {
-    ValidatorCallback validator = (v) => !isLength(v, min, max)
+    ValidatorCallback validator = (v) => !isLength(v!, min, max)
         ? message ?? _messageBuilder.length(v, min, max)
         : null;
     return add(validator);
@@ -130,7 +130,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder equalTo(String comparison, [String? message]) {
     ValidatorCallback validator = (v) =>
-        !equals(v, comparison) ? message ?? _messageBuilder.equalto(v) : null;
+        !equals(v, comparison) ? message ?? _messageBuilder.equalto(v!) : null;
     return add(validator);
   }
 
@@ -139,7 +139,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder gt(int comparison, [String? message]) {
-    ValidatorCallback validator = (v) => !isGt(v, comparison)
+    ValidatorCallback validator = (v) => !isGt(v!, comparison)
         ? message ?? _messageBuilder.gt(v, comparison)
         : null;
     return add(validator);
@@ -150,7 +150,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder gte(int comparison, [String? message]) {
-    ValidatorCallback validator = (v) => !isGte(v, comparison)
+    ValidatorCallback validator = (v) => !isGte(v!, comparison)
         ? message ?? _messageBuilder.gte(v, comparison)
         : null;
     return add(validator);
@@ -161,7 +161,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder lt(int comparison, [String? message]) {
-    ValidatorCallback validator = (v) => !isLt(v, comparison)
+    ValidatorCallback validator = (v) => !isLt(v!, comparison)
         ? message ?? _messageBuilder.lt(v, comparison)
         : null;
     return add(validator);
@@ -172,7 +172,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder lte(int comparison, [String? message]) {
-    ValidatorCallback validator = (v) => !isLte(v, comparison)
+    ValidatorCallback validator = (v) => !isLte(v!, comparison)
         ? message ?? _messageBuilder.lte(v, comparison)
         : null;
     return add(validator);
@@ -184,7 +184,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder range(int min, int max, [String? message]) {
-    ValidatorCallback validator = (v) => !isRange(v, min, max)
+    ValidatorCallback validator = (v) => !isRange(v!, min, max)
         ? message ?? _messageBuilder.range(v, min, max)
         : null;
     return add(validator);
@@ -196,7 +196,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder pattern(String pattern, [String? message]) {
     ValidatorCallback validator = (v) =>
-        !matches(v, pattern) ? message ?? _messageBuilder.pattern(v) : null;
+        !matches(v!, pattern) ? message ?? _messageBuilder.pattern(v) : null;
     return add(validator);
   }
 
@@ -205,7 +205,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder email([String? message]) {
     ValidatorCallback validator =
-        (v) => !isEmail(v) ? message ?? _messageBuilder.email(v) : null;
+        (v) => !isEmail(v!) ? message ?? _messageBuilder.email(v) : null;
     return add(validator);
   }
 
@@ -214,7 +214,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder phoneNumber([String? message]) {
     ValidatorCallback validator = (v) =>
-        !isPhoneNumber(v) ? message ?? _messageBuilder.phoneNumber(v) : null;
+        !isPhoneNumber(v!) ? message ?? _messageBuilder.phoneNumber(v) : null;
     return add(validator);
   }
 
@@ -223,7 +223,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder url([String? message]) {
     ValidatorCallback validator =
-        (v) => !isUrl(v) ? message ?? _messageBuilder.url(v) : null;
+        (v) => !isUrl(v!) ? message ?? _messageBuilder.url(v) : null;
     return add(validator);
   }
 
@@ -232,7 +232,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder number([String? message]) {
     ValidatorCallback validator =
-        (v) => !isNumber(v) ? message ?? _messageBuilder.number(v) : null;
+        (v) => !isNumber(v!) ? message ?? _messageBuilder.number(v) : null;
     return add(validator);
   }
 
@@ -241,7 +241,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder integer([String? message]) {
     ValidatorCallback validator =
-        (v) => !isInteger(v) ? message ?? _messageBuilder.integer(v) : null;
+        (v) => !isInteger(v!) ? message ?? _messageBuilder.integer(v) : null;
     return add(validator);
   }
 
@@ -250,7 +250,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder digits([String? message]) {
     ValidatorCallback validator =
-        (v) => !isDigits(v) ? message ?? _messageBuilder.digits(v) : null;
+        (v) => !isDigits(v!) ? message ?? _messageBuilder.digits(v) : null;
     return add(validator);
   }
 
@@ -259,7 +259,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder alpha([String? message]) {
     ValidatorCallback validator =
-        (v) => !isAlpha(v) ? message ?? _messageBuilder.alpha(v) : null;
+        (v) => !isAlpha(v!) ? message ?? _messageBuilder.alpha(v) : null;
     return add(validator);
   }
 
@@ -268,7 +268,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder alphanum([String? message]) {
     ValidatorCallback validator = (v) =>
-        !isAlphanumeric(v) ? message ?? _messageBuilder.alphanum(v) : null;
+        !isAlphanumeric(v!) ? message ?? _messageBuilder.alphanum(v) : null;
     return add(validator);
   }
 
@@ -277,7 +277,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder halfChars([String? message]) {
     ValidatorCallback validator =
-        (v) => !isHalfWidth(v) ? message ?? _messageBuilder.halfChars(v) : null;
+        (v) => !isHalfWidth(v!) ? message ?? _messageBuilder.halfChars(v) : null;
     return add(validator);
   }
 
@@ -287,7 +287,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder date([String format = 'y-M-d', String? message]) {
     ValidatorCallback validator =
-        (v) => !isDate(v, format) ? message ?? _messageBuilder.date(v) : null;
+        (v) => !isDate(v!, format) ? message ?? _messageBuilder.date(v) : null;
     return add(validator);
   }
 
@@ -297,7 +297,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder before([DateTime? comparison, String? message]) {
     ValidatorCallback validator = (v) =>
-        !isBefore(v, comparison) ? message ?? _messageBuilder.date(v) : null;
+        !isBefore(v!, comparison) ? message ?? _messageBuilder.date(v) : null;
     return add(validator);
   }
 
@@ -306,7 +306,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder todayBefore([DateTime? comparison, String? message]) {
-    ValidatorCallback validator = (v) => !isTodayBefore(v, comparison)
+    ValidatorCallback validator = (v) => !isTodayBefore(v!, comparison)
         ? message ?? _messageBuilder.halfChars(v)
         : null;
     return add(validator);
@@ -318,7 +318,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder after([DateTime? comparison, String? message]) {
     ValidatorCallback validator = (v) =>
-        !isAfter(v, comparison) ? message ?? _messageBuilder.date(v) : null;
+        !isAfter(v!, comparison) ? message ?? _messageBuilder.date(v) : null;
     return add(validator);
   }
 
@@ -327,7 +327,7 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder todayAfter([DateTime? comparison, String? message]) {
-    ValidatorCallback validator = (v) => !isTodayAfter(v, comparison)
+    ValidatorCallback validator = (v) => !isTodayAfter(v!, comparison)
         ? message ?? _messageBuilder.halfChars(v)
         : null;
     return add(validator);
