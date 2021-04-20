@@ -1,11 +1,11 @@
 import 'i18n/en.dart';
 import 'i18n/ja.dart';
-import 'i18n/message_builder.dart';
+import 'i18n/validtor_locale.dart';
 
 /// バリデーションメッセージの対象言語適用クラス
 class Lang {
   /// バリデーションメッセージ群
-  static Map<String, MessageBuilder> _locale = {
+  static Map<String, ValidatorLocale> _locale = {
     'ja': Ja(),
     'en': En(),
   };
@@ -13,7 +13,7 @@ class Lang {
   /// バリデーションメッセージを追加する。
   /// @param String locale ロケール識別キー
   /// @param MessageBuilder messageLocale バリデーションメッセージ本体
-  static void add(String locale, MessageBuilder messageLocale) {
+  static void add(String locale, ValidatorLocale messageLocale) {
     _locale[locale] = messageLocale;
   }
 
@@ -27,8 +27,8 @@ class Lang {
   /// ロケールに対応するバリデーションメッセージを取得する。
   /// @param String locale ロケール識別キー
   /// @return MessageBuilder is バリデーションメッセージ本体
-  static MessageBuilder getLocale(String locale) {
-    MessageBuilder? messageLocale = _locale[locale];
+  static ValidatorLocale getLocale(String locale) {
+    ValidatorLocale? messageLocale = _locale[locale];
     if (messageLocale == null) {
       throw ArgumentError.value(
           locale, 'locale', 'locale is not available.');

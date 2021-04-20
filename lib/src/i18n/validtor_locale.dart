@@ -1,5 +1,5 @@
 /// バリデーションメッセージ作成メソッド群
-abstract class MessageBuilder {
+abstract class ValidatorLocale {
   /// 必須チェック該当時のバリデーションメッセージ
   /// @param String v チェック対象文字列
   /// @return String is validation message

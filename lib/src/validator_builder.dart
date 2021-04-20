@@ -1,6 +1,6 @@
 import 'package:utilities/utilities.dart';
 import 'lang.dart';
-import 'i18n/message_builder.dart';
+import 'i18n/validtor_locale.dart';
 
 typedef ValidatorCallback = String? Function(String? value);
 
@@ -10,24 +10,47 @@ class ValidatorBuilder {
   final List<ValidatorCallback> _validators = [];
 
   /// バリデーションメッセージ本体
-  final MessageBuilder _messageBuilder;
+  final ValidatorLocale _validatorLocale;
 
   /// デフォルトロケール
   static String _locale = 'ja';
 
   /// コンストラクタ
-  ValidatorBuilder({
-    bool required = false,
-  }) : _messageBuilder = Lang.getLocale(_locale) {
+  /// @param bool required 必須条件
+  /// @param int? minLength 最小文字数
+  /// @param int? maxLength 最大文字数
+  /// @param int? min 最小値
+  /// @param int? max 最大値
+  ValidatorBuilder(
+      {bool required = false,
+      int? minLength,
+      int? maxLength,
+      int? min,
+      int? max})
+      : _validatorLocale = Lang.getLocale(_locale) {
     if (required) {
       _validators.add(_requiredValidator());
+    }
+    if (minLength != null && maxLength != null) {
+      _validators.add(_lengthValidator(minLength, maxLength));
+    } else if (minLength != null) {
+      _validators.add(_minLengthValidator(minLength));
+    } else if (maxLength != null) {
+      _validators.add(_maxLengthValidator(maxLength));
+    }
+    if (min != null && max != null) {
+      _validators.add(_rangeValidator(min, max));
+    } else if (min != null) {
+      _validators.add(_gteValidator(min));
+    } else if (max != null) {
+      _validators.add(_lteValidator(max));
     }
   }
 
   /// 指定ロケールのバリデーションメッセージを追加する。
   /// @param String locale ロケール識別キー
   /// @param MessageBuilder messageBuilder バリデーションメッセージ本体
-  static void addMessage(String locale, MessageBuilder messageBuilder) =>
+  static void addMessage(String locale, ValidatorLocale messageBuilder) =>
       Lang.add(locale, messageBuilder);
 
   /// 使用するロケールを設定する。
@@ -80,37 +103,46 @@ class ValidatorBuilder {
   /// 必須チェック
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
-  ValidatorBuilder required([String? message]) {
-    return add(_requiredValidator(message));
-  }
+  ValidatorBuilder required([String? message]) =>
+      add(_requiredValidator(message));
 
   /// 必須チェックメイン
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorCallback is Function
   ValidatorCallback _requiredValidator([String? message]) => (v) =>
-    (v?.isEmpty ?? true) ? message ?? _messageBuilder.required(v!) : null;
+      (v?.isEmpty ?? true) ? message ?? _validatorLocale.required(v!) : null;
 
   /// 最小文字数チェック
   /// @param int length 最小文字数
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
-  ValidatorBuilder minLength(int length, [String? message]) {
-    ValidatorCallback validator = (v) => !isLength(v!, length)
-        ? message ?? _messageBuilder.minLength(v, length)
-        : null;
-    return add(validator);
-  }
+  ValidatorBuilder minLength(int length, [String? message]) =>
+      add(_minLengthValidator(length, message));
+
+  /// 最小文字数チェックメイン
+  /// @param int length 最小文字数
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorCallback is Function
+  ValidatorCallback _minLengthValidator(int length, [String? message]) =>
+      (v) => !isLength(v!, length)
+          ? message ?? _validatorLocale.minLength(v, length)
+          : null;
 
   /// 最大文字数チェック
   /// @param int length 最大文字数
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
-  ValidatorBuilder maxLength(int length, [String? message]) {
-    ValidatorCallback validator = (v) => !isLength(v!, 0, length)
-        ? message ?? _messageBuilder.maxLength(v, length)
-        : null;
-    return add(validator);
-  }
+  ValidatorBuilder maxLength(int length, [String? message]) =>
+      add(_maxLengthValidator(length, message));
+
+  /// 最大文字数チェックメイン
+  /// @param int length 最大文字数
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorCallback is Function
+  ValidatorCallback _maxLengthValidator(int length, [String? message]) =>
+      (v) => !isLength(v!, 0, length)
+          ? message ?? _validatorLocale.maxLength(v, length)
+          : null;
 
   /// 文字数範囲チェック
   /// @param int min 最小文字数
@@ -119,10 +151,20 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder length(int min, int max, [String? message]) {
     ValidatorCallback validator = (v) => !isLength(v!, min, max)
-        ? message ?? _messageBuilder.length(v, min, max)
+        ? message ?? _validatorLocale.length(v, min, max)
         : null;
     return add(validator);
   }
+
+  /// 文字数範囲チェックメイン
+  /// @param int min 最小文字数
+  /// @param int max 最大文字数
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorCallback is Function
+  ValidatorCallback _lengthValidator(int min, int max, [String? message]) =>
+      (v) => !isLength(v!, min, max)
+          ? message ?? _validatorLocale.length(v, min, max)
+          : null;
 
   /// 同値チェック
   /// @param String comparison チェック対象文字列
@@ -130,7 +172,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder equalTo(String comparison, [String? message]) {
     ValidatorCallback validator = (v) =>
-        !equals(v, comparison) ? message ?? _messageBuilder.equalto(v!) : null;
+        !equals(v, comparison) ? message ?? _validatorLocale.equalto(v!) : null;
     return add(validator);
   }
 
@@ -140,7 +182,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder gt(int comparison, [String? message]) {
     ValidatorCallback validator = (v) => !isGt(v!, comparison)
-        ? message ?? _messageBuilder.gt(v, comparison)
+        ? message ?? _validatorLocale.gt(v, comparison)
         : null;
     return add(validator);
   }
@@ -149,12 +191,17 @@ class ValidatorBuilder {
   /// @param int comparison 比較対象値
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
-  ValidatorBuilder gte(int comparison, [String? message]) {
-    ValidatorCallback validator = (v) => !isGte(v!, comparison)
-        ? message ?? _messageBuilder.gte(v, comparison)
-        : null;
-    return add(validator);
-  }
+  ValidatorBuilder gte(int comparison, [String? message]) =>
+      add(_gteValidator(comparison, message));
+
+  /// 以上チェックメイン
+  /// @param int comparison 比較対象値
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorCallback is Function
+  ValidatorCallback _gteValidator(int comparison, [String? message]) =>
+      (v) => !isGte(v!, comparison)
+          ? message ?? _validatorLocale.gte(v, comparison)
+          : null;
 
   /// 未満チェック
   /// @param int comparison 比較対象値
@@ -162,7 +209,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder lt(int comparison, [String? message]) {
     ValidatorCallback validator = (v) => !isLt(v!, comparison)
-        ? message ?? _messageBuilder.lt(v, comparison)
+        ? message ?? _validatorLocale.lt(v, comparison)
         : null;
     return add(validator);
   }
@@ -171,24 +218,35 @@ class ValidatorBuilder {
   /// @param int comparison 比較対象値
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
-  ValidatorBuilder lte(int comparison, [String? message]) {
-    ValidatorCallback validator = (v) => !isLte(v!, comparison)
-        ? message ?? _messageBuilder.lte(v, comparison)
-        : null;
-    return add(validator);
-  }
+  ValidatorBuilder lte(int comparison, [String? message]) =>
+      add(_lteValidator(comparison, message));
+
+  /// 以下チェックメイン
+  /// @param int comparison 比較対象値
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorCallback is Function
+  ValidatorCallback _lteValidator(int comparison, [String? message]) =>
+      (v) => !isLte(v!, comparison)
+          ? message ?? _validatorLocale.lte(v, comparison)
+          : null;
 
   /// 範囲チェック
   /// @param int min 比較最小値
   /// @param int max 比較最大値
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
-  ValidatorBuilder range(int min, int max, [String? message]) {
-    ValidatorCallback validator = (v) => !isRange(v!, min, max)
-        ? message ?? _messageBuilder.range(v, min, max)
-        : null;
-    return add(validator);
-  }
+  ValidatorBuilder range(int min, int max, [String? message]) =>
+      add(_rangeValidator(min, max, message));
+
+  /// 範囲チェックメイン
+  /// @param int min 比較最小値
+  /// @param int max 比較最大値
+  /// @param String? message 独自エラーメッセージ
+  /// @return ValidatorCallback is Function
+  ValidatorCallback _rangeValidator(int min, int max, [String? message]) =>
+      (v) => !isRange(v!, min, max)
+          ? message ?? _validatorLocale.range(v, min, max)
+          : null;
 
   /// 正規表現チェック
   /// @param String pattern 正規表現文字列
@@ -196,7 +254,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder pattern(String pattern, [String? message]) {
     ValidatorCallback validator = (v) =>
-        !matches(v!, pattern) ? message ?? _messageBuilder.pattern(v) : null;
+        !matches(v!, pattern) ? message ?? _validatorLocale.pattern(v) : null;
     return add(validator);
   }
 
@@ -205,7 +263,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder email([String? message]) {
     ValidatorCallback validator =
-        (v) => !isEmail(v!) ? message ?? _messageBuilder.email(v) : null;
+        (v) => !isEmail(v!) ? message ?? _validatorLocale.email(v) : null;
     return add(validator);
   }
 
@@ -214,7 +272,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder phoneNumber([String? message]) {
     ValidatorCallback validator = (v) =>
-        !isPhoneNumber(v!) ? message ?? _messageBuilder.phoneNumber(v) : null;
+        !isPhoneNumber(v!) ? message ?? _validatorLocale.phoneNumber(v) : null;
     return add(validator);
   }
 
@@ -223,7 +281,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder url([String? message]) {
     ValidatorCallback validator =
-        (v) => !isUrl(v!) ? message ?? _messageBuilder.url(v) : null;
+        (v) => !isUrl(v!) ? message ?? _validatorLocale.url(v) : null;
     return add(validator);
   }
 
@@ -232,7 +290,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder number([String? message]) {
     ValidatorCallback validator =
-        (v) => !isNumber(v!) ? message ?? _messageBuilder.number(v) : null;
+        (v) => !isNumber(v!) ? message ?? _validatorLocale.number(v) : null;
     return add(validator);
   }
 
@@ -241,7 +299,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder integer([String? message]) {
     ValidatorCallback validator =
-        (v) => !isInteger(v!) ? message ?? _messageBuilder.integer(v) : null;
+        (v) => !isInteger(v!) ? message ?? _validatorLocale.integer(v) : null;
     return add(validator);
   }
 
@@ -250,7 +308,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder digits([String? message]) {
     ValidatorCallback validator =
-        (v) => !isDigits(v!) ? message ?? _messageBuilder.digits(v) : null;
+        (v) => !isDigits(v!) ? message ?? _validatorLocale.digits(v) : null;
     return add(validator);
   }
 
@@ -259,7 +317,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder alpha([String? message]) {
     ValidatorCallback validator =
-        (v) => !isAlpha(v!) ? message ?? _messageBuilder.alpha(v) : null;
+        (v) => !isAlpha(v!) ? message ?? _validatorLocale.alpha(v) : null;
     return add(validator);
   }
 
@@ -268,7 +326,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder alphanum([String? message]) {
     ValidatorCallback validator = (v) =>
-        !isAlphanumeric(v!) ? message ?? _messageBuilder.alphanum(v) : null;
+        !isAlphanumeric(v!) ? message ?? _validatorLocale.alphanum(v) : null;
     return add(validator);
   }
 
@@ -276,8 +334,8 @@ class ValidatorBuilder {
   /// @param String? message 独自エラーメッセージ
   /// @return ValidatorBuilder is this
   ValidatorBuilder halfChars([String? message]) {
-    ValidatorCallback validator =
-        (v) => !isHalfWidth(v!) ? message ?? _messageBuilder.halfChars(v) : null;
+    ValidatorCallback validator = (v) =>
+        !isHalfWidth(v!) ? message ?? _validatorLocale.halfChars(v) : null;
     return add(validator);
   }
 
@@ -287,7 +345,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder date([String format = 'y-M-d', String? message]) {
     ValidatorCallback validator =
-        (v) => !isDate(v!, format) ? message ?? _messageBuilder.date(v) : null;
+        (v) => !isDate(v!, format) ? message ?? _validatorLocale.date(v) : null;
     return add(validator);
   }
 
@@ -297,7 +355,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder before([DateTime? comparison, String? message]) {
     ValidatorCallback validator = (v) =>
-        !isBefore(v!, comparison) ? message ?? _messageBuilder.date(v) : null;
+        !isBefore(v!, comparison) ? message ?? _validatorLocale.date(v) : null;
     return add(validator);
   }
 
@@ -307,7 +365,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder todayBefore([DateTime? comparison, String? message]) {
     ValidatorCallback validator = (v) => !isTodayBefore(v!, comparison)
-        ? message ?? _messageBuilder.halfChars(v)
+        ? message ?? _validatorLocale.halfChars(v)
         : null;
     return add(validator);
   }
@@ -318,7 +376,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder after([DateTime? comparison, String? message]) {
     ValidatorCallback validator = (v) =>
-        !isAfter(v!, comparison) ? message ?? _messageBuilder.date(v) : null;
+        !isAfter(v!, comparison) ? message ?? _validatorLocale.date(v) : null;
     return add(validator);
   }
 
@@ -328,7 +386,7 @@ class ValidatorBuilder {
   /// @return ValidatorBuilder is this
   ValidatorBuilder todayAfter([DateTime? comparison, String? message]) {
     ValidatorCallback validator = (v) => !isTodayAfter(v!, comparison)
-        ? message ?? _messageBuilder.halfChars(v)
+        ? message ?? _validatorLocale.halfChars(v)
         : null;
     return add(validator);
   }

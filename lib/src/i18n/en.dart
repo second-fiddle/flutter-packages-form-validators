@@ -1,7 +1,7 @@
-import 'message_builder.dart';
+import 'validtor_locale.dart';
 
 /// バリデーションメッセージ（英語）
-class En extends MessageBuilder {
+class En extends ValidatorLocale {
   @override
   String required(String v) => 'The field is required.';
 
