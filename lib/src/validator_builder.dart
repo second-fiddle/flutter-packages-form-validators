@@ -21,12 +21,14 @@ class ValidatorBuilder {
   /// @param int? maxLength 最大文字数
   /// @param int? min 最小値
   /// @param int? max 最大値
+  /// @param List<ValidatorCallback>? validators 適用するバリデーション
   ValidatorBuilder(
       {bool required = false,
       int? minLength,
       int? maxLength,
       int? min,
-      int? max})
+      int? max,
+      List<ValidatorCallback>? validators})
       : _validatorLocale = Lang.getLocale(_locale) {
     if (required) {
       _validators.add(_requiredValidator());
@@ -44,6 +46,9 @@ class ValidatorBuilder {
       _validators.add(_gteValidator(min));
     } else if (max != null) {
       _validators.add(_lteValidator(max));
+    }
+    if (validators != null && validators.length > 0) {
+      _validators.addAll(validators);
     }
   }
 
@@ -72,6 +77,10 @@ class ValidatorBuilder {
     _validators.add(validator);
     return this;
   }
+
+  /// 適用されているバリデーションを取得する。
+  /// @return List<ValidatorCallback> is apply validators
+  List<ValidatorCallback> getValidators() => _validators;
 
   /// 適用されているバリデーションを順番に実行する。
   /// @param String value チェック対象

@@ -6,3 +6,8 @@
 
 * message_builder.dart rename validtor_locale.dart
 * constructor add min, max parameter
+
+## [0.0.3] - 2021.04.21
+
+* validator_builder constructor add List<ValidatorCallback>? parameter
+* validator_builder add getValidators method
