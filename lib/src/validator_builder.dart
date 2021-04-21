@@ -79,8 +79,10 @@ class ValidatorBuilder {
 
   /// 適用されているバリデーションを取得する。
   /// @param List<ValidatorCallback> validators 適用するバリデーション群
-  void addValidators(List<ValidatorCallback> validators) {
+  /// @return ValidationBuilder is this
+  ValidatorBuilder addValidators(List<ValidatorCallback> validators) {
     _validators.addAll(validators);
+    return this;
   }
 
   /// 適用されているバリデーションを順番に実行する。

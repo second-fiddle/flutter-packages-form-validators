@@ -15,5 +15,9 @@
 ## [0.0.4] - 2021.04.21
 
 * validator_builder constructor remove List<ValidatorCallback>? parameter
-* validator_builder add setValidators method
+* validator_builder add addValidators method
+
+## [0.0.5] - 2021.04.21
+
+* validator_builder addValidators method return this
 
